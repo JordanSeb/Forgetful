@@ -3,11 +3,12 @@ import { View, Text, TextInput, Button } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function AddReminderScreen({ navigation }) {
-  const [name, setName] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [total, setTotal] = useState('');
-  const [details, setDetails] = useState('');
+export default function EditReminderScreen({ route, navigation }) {
+  const { reminder } = route.params;
+  const [name, setName] = useState(reminder.name);
+  const [date, setDate] = useState(new Date(reminder.date));
+  const [total, setTotal] = useState(reminder.total);
+  const [details, setDetails] = useState(reminder.details);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [userId, setUserId] = useState(null);
 
@@ -28,13 +29,13 @@ export default function AddReminderScreen({ navigation }) {
     fetchUserId();
   }, []);
 
-  const handleAddReminder = async () => {
+  const handleEditReminder = async () => {
     if (!userId) {
       alert("Error: No userId found. Please restart the app.");
       return;
     }
 
-    const reminder = {
+    const updatedReminder = {
       userId,
       name,
       date: date.toISOString().split('T')[0],
@@ -42,14 +43,12 @@ export default function AddReminderScreen({ navigation }) {
       details,
     };
 
-    console.log("Sending reminder:", reminder);
-
-    fetch('http://172.16.255.164:3000/reminders', {  // Reemplaza 192.168.1.100 con tu IP local
-      method: 'POST',
+    fetch(`http://172.16.255.164:3000/reminders/${reminder.id}`, {  // Reemplaza 192.168.1.100 con tu IP local
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(reminder),
+      body: JSON.stringify(updatedReminder),
     })
       .then((response) => response.json())
       .then((data) => {
@@ -57,14 +56,14 @@ export default function AddReminderScreen({ navigation }) {
         navigation.goBack();
       })
       .catch((error) => {
-        console.error("Error adding reminder:", error);
-        alert("Error adding reminder: " + error.message);
+        console.error("Error editing reminder:", error);
+        alert("Error editing reminder: " + error.message);
       });
   };
 
   return (
     <View>
-      <Text>Agregar Recordatorio</Text>
+      <Text>Editar Recordatorio</Text>
       <TextInput
         placeholder="Nombre"
         value={name}
@@ -95,7 +94,7 @@ export default function AddReminderScreen({ navigation }) {
           }}
         />
       )}
-      <Button title="Agregar Recordatorio" onPress={handleAddReminder} />
+      <Button title="Guardar Cambios" onPress={handleEditReminder} />
     </View>
   );
 }
